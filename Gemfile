@@ -3,8 +3,8 @@ source 'https://rubygems.org'
 gem 'chef', '>= 12.5.1'
 
 group :style do
-  gem 'foodcritic', '~> 11.0'
-  gem 'cookstyle', '~> 1.3'
+  gem 'foodcritic', '~> 15.0'
+  gem 'cookstyle', '~> 3.0'
 end
 
 group :test do
@@ -18,10 +18,10 @@ group :test do
 end
 
 group :integration do
-  gem 'test-kitchen', '~> 1.16'
+  gem 'test-kitchen', '~> 1.24'
   gem 'kitchen-dokken', '= 2.6.0'
-  gem 'kitchen-ec2', '~> 1.2'
-  gem 'kitchen-inspec', '~> 0.18'
+  gem 'kitchen-ec2', '~> 2.4'
+  gem 'kitchen-inspec', '~> 1.0.1'
 end
 
 group :release do
