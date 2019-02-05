@@ -1,56 +1,49 @@
+dist: xenial
+
+addons:
+  apt:
+    sources:
+      - chef-current-trusty
+    packages:
+      - chefdk
+
+# Don't `bundle install` which takes about 1.5 mins
+install: echo "skip bundle install"
+
 branches:
   only:
-  - master
-language: ruby
-cache: bundler
+    - master
 
-# necessary for docker to work
-sudo: required
-dist: trusty
-services:
-- docker
-before_install:
-- gem update --system
-- gem --version
-- bundle --version
+services: docker
+
+env:
+  matrix:
+  - INSTANCE=default-centos-7 CHEF_VERSION=13.0.118
+  - INSTANCE=default-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=missing-profile-no-fail-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=missing-profile-fail-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=gem-install-version-centos-7 CHEF_VERSION=13.0.118
+  - INSTANCE=gem-install-version-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=gem-install-core-version-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=default-centos-7 CHEF_VERSION=13.0.118 CHEF_VERSION=13.0.118
+  - INSTANCE=skip-inspec-gem-install-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=inspec-attributes-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=chef-node-enabled-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=chef-node-disabled-ubuntu-1404 CHEF_VERSION=13.0.118
+  - INSTANCE=hash-centos-7 CHEF_VERSION=13.0.118
+  - INSTANCE=hash-ubuntu-1404 CHEF_VERSION=13.0.118
+
+before_script:
+  - sudo iptables -L DOCKER || ( echo "DOCKER iptables chain missing" ; sudo iptables -N DOCKER )
+  - eval "$(chef shell-init bash)"
+  - chef --version
+  - cookstyle --version
+  - foodcritic --version
+
+script: KITCHEN_LOCAL_YAML=kitchen.dokken.yml kitchen verify ${INSTANCE}
+
 matrix:
   include:
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='default-centos-7'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='default-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='missing-profile-no-fail-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE && exit 1 || echo "OK"
-    env: SUITE=test:integration OS='missing-profile-fail-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='gem-install-version-centos-7'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='gem-install-version-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='gem-install-core-version-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='skip-inspec-gem-install-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='inspec-attributes-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='chef-node-enabled-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='chef-node-disabled-ubuntu-1404'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='hash-centos-7'
-  - rvm: 2.3.3
-    script: bundle exec rake $SUITE
-    env: SUITE=test:integration OS='hash-ubuntu-1404'
+    - script:
+      - chef exec delivery local all
+      env: UNIT_AND_LINT=1
